@@ -62,6 +62,7 @@ function Permissions() {
     this.FACTORY_TEST = 'android.permission.FACTORY_TEST';
     this.FLASHLIGHT = 'android.permission.FLASHLIGHT';
     this.FORCE_BACK = 'android.permission.FORCE_BACK';
+    this.FOREGROUND_SERVICE = 'android.permission.FOREGROUND_SERVICE';
     this.GET_ACCOUNTS = 'android.permission.GET_ACCOUNTS';
     this.GET_PACKAGE_SIZE = 'android.permission.GET_PACKAGE_SIZE';
     this.GET_TASKS = 'android.permission.GET_TASKS';
