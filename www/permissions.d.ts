@@ -108,6 +108,7 @@ export interface Permissions {
   READ_MEDIA_VIDEO: "android.permission.READ_MEDIA_VIDEO";
   READ_PHONE_STATE: "android.permission.READ_PHONE_STATE";
   READ_PROFILE: "android.permission.READ_PROFILE";
+  READ_PRIVILEGED_PHONE_STATE: "android.permission.READ_PRIVILEGED_PHONE_STATE";
   READ_SMS: "android.permission.READ_SMS";
   READ_SOCIAL_STREAM: "android.permission.READ_SOCIAL_STREAM";
   READ_SYNC_SETTINGS: "android.permission.READ_SYNC_SETTINGS";
