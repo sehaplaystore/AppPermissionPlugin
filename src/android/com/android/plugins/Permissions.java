@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
@@ -19,43 +20,43 @@ import org.json.JSONObject;
  */
 public class Permissions extends CordovaPlugin {
 
-    private static String TAG = "Permissions";
+    private static final String TAG = "Permissions";
 
     private static final String ACTION_CHECK_PERMISSION = "checkPermission";
     private static final String ACTION_REQUEST_PERMISSION = "requestPermission";
     private static final String ACTION_REQUEST_PERMISSIONS = "requestPermissions";
 
     private static final int REQUEST_CODE_ENABLE_PERMISSION = 55433;
-    private static int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469; // For SYSTEM_ALERT_WINDOW
+    private static final int ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469; // For SYSTEM_ALERT_WINDOW
 
     private static final String KEY_ERROR = "error";
     private static final String KEY_MESSAGE = "message";
     private static final String KEY_RESULT_PERMISSION = "hasPermission";
 
     private CallbackContext permissionsCallback;
+    private Context appContext;
+
+    @Override
+    protected void pluginInitialize() {
+        appContext = cordova.getActivity().getApplicationContext();
+    }
 
     @Override
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (ACTION_CHECK_PERMISSION.equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                public void run() {
-                    checkPermissionAction(callbackContext, args);
-                }
-            });
+            cordova.getThreadPool().execute(() -> checkPermissionAction(callbackContext, args));
             return true;
         } else if (ACTION_REQUEST_PERMISSION.equals(action) || ACTION_REQUEST_PERMISSIONS.equals(action)) {
-            cordova.getThreadPool().execute(new Runnable() {
-                public void run() {
-                    try {
-                        requestPermissionAction(callbackContext, args);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        JSONObject returnObj = new JSONObject();
-                        addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_PERMISSION);
-                        addProperty(returnObj, KEY_MESSAGE, "Request permission has been denied.");
-                        callbackContext.error(returnObj);
-                        permissionsCallback = null;
-                    }
+            cordova.getThreadPool().execute(() -> {
+                try {
+                    requestPermissionAction(callbackContext, args);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error requesting permission", e);
+                    JSONObject returnObj = new JSONObject();
+                    addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_PERMISSION);
+                    addProperty(returnObj, KEY_MESSAGE, "Request permission has been denied.");
+                    callbackContext.error(returnObj);
+                    permissionsCallback = null;
                 }
             });
             return true;
@@ -71,7 +72,7 @@ public class Permissions extends CordovaPlugin {
 
         JSONObject returnObj = new JSONObject();
         if (permissions != null && permissions.length > 0) {
-            //Call checkPermission again to verify
+            // Call checkPermission again to verify
             boolean hasAllPermissions = hasAllPermissions(permissions);
             addProperty(returnObj, KEY_RESULT_PERMISSION, hasAllPermissions);
             permissionsCallback.success(returnObj);
@@ -98,6 +99,7 @@ public class Permissions extends CordovaPlugin {
             try {
                 permission0 = permission.getString(0);
             } catch (JSONException ex) {
+                Log.e(TAG, "Error extracting permission", ex);
                 JSONObject returnObj = new JSONObject();
                 addProperty(returnObj, KEY_ERROR, ACTION_REQUEST_PERMISSION);
                 addProperty(returnObj, KEY_MESSAGE, "Check permission has been failed." + ex);
@@ -106,8 +108,7 @@ public class Permissions extends CordovaPlugin {
             }
             JSONObject returnObj = new JSONObject();
             if ("android.permission.SYSTEM_ALERT_WINDOW".equals(permission0)) {
-                Context context = this.cordova.getActivity().getApplicationContext();
-                addProperty(returnObj, KEY_RESULT_PERMISSION, Settings.canDrawOverlays(context));
+                addProperty(returnObj, KEY_RESULT_PERMISSION, Settings.canDrawOverlays(appContext));
             } else {
                 addProperty(returnObj, KEY_RESULT_PERMISSION, cordova.hasPermission(permission0));
             }
@@ -135,13 +136,10 @@ public class Permissions extends CordovaPlugin {
             if (permissionArray.length == 1 && "android.permission.SYSTEM_ALERT_WINDOW".equals(permissionArray[0])) {
                 Log.i(TAG, "Request permission SYSTEM_ALERT_WINDOW");
 
-                Activity activity = this.cordova.getActivity();
-                Context context = this.cordova.getActivity().getApplicationContext();
+                Activity activity = cordova.getActivity();
 
                 // SYSTEM_ALERT_WINDOW
-                // https://stackoverflow.com/questions/40355344/how-to-programmatically-grant-the-draw-over-other-apps-permission-in-android
-                // https://www.codeproject.com/Tips/1056871/Android-Marshmallow-Overlay-Permission
-                if (!Settings.canDrawOverlays(context)) {
+                if (!Settings.canDrawOverlays(appContext)) {
                     Log.w(TAG, "Request permission SYSTEM_ALERT_WINDOW start intent because canDrawOverlays=false");
                     Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                             Uri.parse("package:" + activity.getPackageName()));
@@ -159,7 +157,7 @@ public class Permissions extends CordovaPlugin {
             try {
                 stringArray[i] = permissions.getString(i);
             } catch (JSONException ignored) {
-                //Believe exception only occurs when adding duplicate keys, so just ignore it
+                // Believe exception only occurs when adding duplicate keys, so just ignore it
             }
         }
         return stringArray;
@@ -170,13 +168,11 @@ public class Permissions extends CordovaPlugin {
     }
 
     private boolean hasAllPermissions(String[] permissions) throws JSONException {
-
         for (String permission : permissions) {
-            if(!cordova.hasPermission(permission)) {
+            if (!cordova.hasPermission(permission)) {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -188,7 +184,7 @@ public class Permissions extends CordovaPlugin {
                 obj.put(key, value);
             }
         } catch (JSONException ignored) {
-            //Believe exception only occurs when adding duplicate keys, so just ignore it
+            // Believe exception only occurs when adding duplicate keys, so just ignore it
         }
     }
 }
