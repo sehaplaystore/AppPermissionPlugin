@@ -21,12 +21,19 @@
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="Permissions">
         <param name="android-package" value="com.android.plugins.Permissions" />
-        <!-- adding code for removing the record audio permissions start-->
-        <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
-         <!-- adding code for removing the record audio permissions ends here-->
       </feature>
     </config-file>
-
+<!-- Define tools namespace globally once -->
+<edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools" />
+</edit-config>
+<!-- Only remove if present, using a safer remove path -->
+<edit-config file="AndroidManifest.xml" mode="merge"
+              target="/manifest/uses-permission[@android:name='android.permission.RECORD_AUDIO']">
+<uses-permission android:name="android.permission.RECORD_AUDIO"
+                    tools:node="remove"/>
+</edit-config>
     <source-file src="src/android/com/android/plugins/Permissions.java" target-dir="src/com/android/plugins"/>
 
   </platform>
