@@ -26,16 +26,16 @@
 
     <source-file src="src/android/com/android/plugins/Permissions.java" target-dir="src/com/android/plugins"/>
 <!-- adding code for removing the record audio permissions start-->
-   <!-- Declare the tools namespace -->
+   <!-- Define tools namespace globally once -->
 <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"/>
+             xmlns:tools="http://schemas.android.com/tools" />
 </edit-config>
-<!-- Try removing RECORD_AUDIO using edit-config instead of config-file -->
-<edit-config file="AndroidManifest.xml"
-              mode="merge"
+<!-- Only remove if present, using a safer remove path -->
+<edit-config file="AndroidManifest.xml" mode="merge"
               target="/manifest/uses-permission[@android:name='android.permission.RECORD_AUDIO']">
-<uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove"/>
+<uses-permission android:name="android.permission.RECORD_AUDIO"
+                    tools:node="remove"/>
 </edit-config>
     <!-- adding code for removing the record audio permissions ends here-->
   </platform>
